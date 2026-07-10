@@ -1,0 +1,53 @@
+{
+    "name": "server",
+    "version": "1.0.0",
+    "description": "",
+    "license": "AGPL-3.0-only",
+    "author": "",
+    "type": "module",
+    "main": "src/index.ts",
+    "scripts": {
+        "dev": "NODE_ENV=development tsx watch src/index.ts",
+        "lint": "prettier -w src/ && eslint src/",
+        "build": "esbuild \"src/index.ts\" --bundle --platform=node --target=node24 --format=esm --minify --sourcemap --packages=external --outfile=\"dist/index.js\"",
+        "start": "NODE_ENV=production node dist/index.js"
+    },
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "cors": "^2.8.6",
+        "dotenv": "^17.4.2",
+        "express": "^5.2.1",
+        "express-rate-limit": "^8.5.2",
+        "helmet": "^8.2.0",
+        "http-status": "^2.1.0",
+        "mongodb": "^7.2.0",
+        "socket.io": "^4.8.3",
+        "swagger-ui-express": "^5.0.1",
+        "zod": "^4.4.3"
+    },
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "@types/bcrypt": "^6.0.0",
+        "@types/express": "^5.0.6",
+        "@types/http-status": "^0.2.30",
+        "@types/node": "^25.9.2",
+        "@types/socket.io": "^3.0.1",
+        "@types/swagger-ui-express": "^4.1.8",
+        "esbuild": "^0.28.1",
+        "eslint": "^10.4.1",
+        "globals": "^17.6.0",
+        "jiti": "^2.7.0",
+        "mongodb-memory-server": "^11.2.0",
+        "prettier": "^3.8.3",
+        "tsx": "^4.22.4",
+        "type-fest": "^5.8.0",
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.61.0"
+    },
+    "allowScripts": {
+        "bcrypt@6.0.0": true,
+        "esbuild@0.28.1": true,
+        "mongodb-memory-server@11.2.0": true,
+        "@scarf/scarf@1.4.0": true
+    }
+}
