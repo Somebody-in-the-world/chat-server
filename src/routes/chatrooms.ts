@@ -1,6 +1,6 @@
 import * as z from "zod";
 import type { Chatrooms } from "../chatrooms.js";
-import { rateLimit, validateToken } from "../middleware.js";
+import { rateLimit, validateToken } from "../middleware/index.js";
 import { OpenApiRouter } from "../openapi.js";
 import {
     ChatroomSchema,

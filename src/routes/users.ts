@@ -3,7 +3,7 @@ import { OpenApiRouter } from "../openapi.js";
 import { status, statusSchema } from "../response.js";
 import { CreateUserRequestSchema, PublicUserSchema } from "../schemas.js";
 import type { Users } from "../users.js";
-import { rateLimit, validateToken } from "../middleware.js";
+import { rateLimit, validateToken } from "../middleware/index.js";
 import type { Tokens } from "../tokens.js";
 
 export function createUsersRouter(users: Users, tokens: Tokens) {

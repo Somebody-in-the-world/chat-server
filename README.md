@@ -60,6 +60,8 @@ After starting the server:
 - Interactive docs: http://\[server-url\]/docs
 - OpenAPI spec: http://\[server-url\]/openapi.json
 
+Note: For security reasons, documentation will only be available in development.
+
 ---
 
 This project is licensed under the GNU AGPL v3. See the LICENSE file for details.

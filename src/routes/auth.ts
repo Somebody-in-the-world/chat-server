@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { rateLimit, validateToken } from "../middleware.js";
+import { rateLimit, validateToken } from "../middleware/index.js";
 import { OpenApiRouter } from "../openapi.js";
 import { status, statusSchema } from "../response.js";
 import { PublicUserSchema, UserLoginRequestSchema } from "../schemas.js";

@@ -1,7 +1,7 @@
 import * as z from "zod";
 import { OpenApiRouter } from "../openapi.js";
 import type { Db } from "mongodb";
-import { rateLimit } from "../middleware.js";
+import { rateLimit } from "../middleware/index.js";
 
 export function createGeneralRouter(db: Db) {
     const router = OpenApiRouter("/api", { tags: ["General"] });

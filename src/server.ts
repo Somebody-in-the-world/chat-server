@@ -10,7 +10,7 @@ import { createUsersRouter } from "./routes/users.js";
 import { createAuthRouter } from "./routes/auth.js";
 import { addSocketHooks } from "./socket.js";
 import { Messages } from "./messages.js";
-import { logRequests } from "./middleware.js";
+import { honeypot, logRequests } from "./middleware/index.js";
 import cors from "cors";
 import { buildOpenApiDocument } from "./openapi.js";
 import swaggerUi from "swagger-ui-express";
@@ -46,6 +46,29 @@ export function createApp({ db }: { db: Db }) {
     );
     app.use(express.json());
     app.use(logRequests());
+    app.use(
+        honeypot({
+            paths: [
+                {
+                    path: ".env",
+                    type: "substring"
+                },
+                {
+                    path: "/.git",
+                    type: "basepath"
+                }
+            ],
+            suspiciousHandler(req, _res, metadata) {
+                console.log(
+                    `Suspicious request detected: ${req.method} ${req.path} (suspicious count: ${metadata.suspiciousCount})`
+                );
+            },
+            banHandler(req, res) {
+                console.log(`${req.method} ${req.path} coming from banned IP, ending request`);
+                res.status(403).end();
+            }
+        })
+    );
 
     chatroomRoutes.attach(app);
     userRoutes.attach(app);
@@ -64,8 +87,11 @@ export function createApp({ db }: { db: Db }) {
             }
         ]
     });
-    app.get("/openapi.json", (_req, res) => res.send(doc));
-    app.use("/docs", swaggerUi.serve, swaggerUi.setup(doc));
+
+    if (process.env.NODE_ENV === "development") {
+        app.get("/openapi.json", (_req, res) => res.send(doc));
+        app.use("/docs", swaggerUi.serve, swaggerUi.setup(doc));
+    }
 
     app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
         if (err instanceof SyntaxError) {
