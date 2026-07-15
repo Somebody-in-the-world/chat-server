@@ -16,10 +16,19 @@ export interface IpStorage {
 
 type HoneypotPath =
     | string
+    | ((
+          | {
+                path: string;
+                type?: "exact" | "substring" | "basepath";
+            }
+          | {
+                regex: RegExp;
+                type: "regex";
+            }
+      ) & { method?: string | null })
     | {
-          path: string;
-          type?: "exact" | "substring" | "basepath";
-          method?: string | null;
+          fn: (path: string, method: string) => boolean;
+          type: "function";
       };
 
 type HoneypotHandler = (req: Request, res: Response, metadata: IpMetadata) => void;
@@ -80,46 +89,46 @@ export const defaultBanHandler: HoneypotHandler = (_req, res) => {
 
 export const defaultSuspiciousHandler: HoneypotHandler = () => {};
 
+function checkSuspiciousSingular(req: Request, path: HoneypotPath) {
+    const receivedPath = normalize(req.path);
+
+    if (typeof path === "string") {
+        return checkSuspiciousSingular(req, {
+            type: "exact",
+            path
+        });
+    }
+    switch (path.type) {
+        case "regex":
+            return path.regex.test(receivedPath) && matchMethod(path.method, req.method);
+        case "function":
+            return path.fn(receivedPath, req.method.toUpperCase());
+    }
+
+    const matchPath = normalize(typeof path === "string" ? path : path.path);
+    switch (path.type ?? "exact") {
+        case "exact":
+            return matchPath === receivedPath && matchMethod(path.method, req.method);
+        case "substring":
+            return receivedPath.includes(matchPath) && matchMethod(path.method, req.method);
+        case "basepath":
+            return receivedPath.startsWith(matchPath) && matchMethod(path.method, req.method);
+    }
+}
+
 function checkSuspicious(req: Request, paths: HoneypotPath[]) {
     for (const path of paths) {
-        if (typeof path === "string") {
-            if (path === req.path) {
-                return true;
-            }
-        } else {
-            const matchPath = normalize(path.path);
-            const receivedPath = normalize(req.path);
-            switch (path.type) {
-                case "exact":
-                    if (matchPath === receivedPath && matchMethod(path.method, req.method)) {
-                        return true;
-                    }
-                    break;
-                case "substring":
-                    if (receivedPath.includes(matchPath) && matchMethod(path.method, req.method)) {
-                        return true;
-                    }
-                    break;
-                case "basepath":
-                    if (
-                        receivedPath.startsWith(matchPath) &&
-                        matchMethod(path.method, req.method)
-                    ) {
-                        return true;
-                    }
-                    break;
-            }
-        }
+        if (checkSuspiciousSingular(req, path)) return true;
     }
     return false;
 }
 
-export const honeypot =
-    (config?: HoneypotConfig): RequestHandler =>
-    (req, res, next) => {
+export const honeypot = (config?: HoneypotConfig): RequestHandler => {
+    const storage = new MemoryStorage();
+    return (req, res, next) => {
         const {
             paths = [],
-            ipStorage = new MemoryStorage(),
+            ipStorage = storage,
             banThreshold = 5,
             banDuration = 60 * 60 * 1000,
             banHandler = defaultBanHandler,
@@ -170,5 +179,10 @@ export const honeypot =
             ipMetadata = ipStorage.get(ip);
             suspiciousHandler(req, res, ipMetadata!);
         }
+        if (ipMetadata?.isBanned) {
+            banHandler(req, res, ipMetadata);
+            return;
+        }
         next();
     };
+};
